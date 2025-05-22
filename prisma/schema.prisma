@@ -17,6 +17,7 @@ model User {
   emailVerified DateTime?
   password      String?
   image         String?
+  isActive      Boolean   @default(true)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
   role          Role      @default(MEMBER)
@@ -33,14 +34,11 @@ model User {
   extraExpenses ExtraExpense[]
   guestMeals    GuestMeal[]
 
-  @@index([id])
+
   @@index([email])
-  @@index([email ,password])
-  @@index([createdAt])
-  @@index([updatedAt])
-  @@index([role])
-  @@index([language])
-  @@index([emailVerified])
+  @@index([role, isActive])
+  @@index([createdAt, updatedAt])
+  @@index([emailVerified, isActive])
 }
 
 enum Role {
@@ -58,6 +56,10 @@ model Room {
   isActive    Boolean     @default(true)
   fineAmount  Float       @default(0)
   fineEnabled Boolean     @default(false)
+  
+  @@index([isActive])
+  @@index([createdAt])
+  @@unique([name])
   
   members     RoomMember[]
   meals       Meal[]
@@ -82,6 +84,8 @@ model RoomMember {
   room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   
   @@unique([userId, roomId])
+  @@index([roomId, role]) 
+  @@index([joinedAt]) 
 }
 
 model Meal {
@@ -98,6 +102,9 @@ model Meal {
   room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
   
   @@unique([userId, roomId, date, type])
+  @@index([roomId, date]) 
+  @@index([userId, date]) 
+  @@index([type, date]) 
 }
 
 enum MealType {
@@ -120,6 +127,9 @@ model GuestMeal {
   
   roomId    String
   room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  @@index([roomId, date]) 
+  @@index([userId, date]) 
 }
 
 model ShoppingItem {
@@ -136,6 +146,10 @@ model ShoppingItem {
   
   roomId      String
   room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  @@index([roomId, date]) 
+  @@index([amount]) 
+  @@index([userId, date]) 
 }
 
 model Payment {
@@ -155,6 +169,10 @@ model Payment {
   room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
   
   bkashPayment BkashPayment?
+  
+  @@index([roomId, status, date]) 
+  @@index([userId, status, date]) 
+  @@index([method, status]) 
 }
 
 enum PaymentMethod {
@@ -183,6 +201,8 @@ model Vote {
   candidateId String?
   
   @@unique([userId, roomId, type])
+  @@index([roomId, type, candidateId]) 
+  @@index([createdAt]) 
 }
 
 enum VoteType {
@@ -199,6 +219,9 @@ model Notification {
   
   userId    String
   user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId, read]) 
+  @@index([createdAt]) 
 }
 
 enum NotificationType {

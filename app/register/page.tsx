@@ -84,18 +84,6 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gray-50 px-4 py-8 dark:bg-gray-900">
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 4000,
-          style: {
-            background: 'hsl(var(--background))',
-            color: 'hsl(var(--foreground))',
-            border: '1px solid hsl(var(--border))',
-          },
-        }}
-      />
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-0.5 p-6 pb-2">
           <CardTitle className="text-xl font-bold text-center">Create an account</CardTitle>
@@ -138,14 +126,14 @@ export default function RegisterPage() {
             
             {/* <div className="space-y-2"> */}
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
+              <Input id="name" placeholder="Enter your full name" value={name} onChange={(e) => setName(e.target.value)} required />
             {/* </div> */}
             {/* <div className="space-y-2"> */}
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
                 type="email"
-                placeholder="m@example.com"
+                placeholder="Enter your email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -158,6 +146,7 @@ export default function RegisterPage() {
                   id="password"
                   type={showPassword ? "text" : "password"}
                   value={password}
+                  placeholder="Enter your password"
                   onChange={(e) => setPassword(e.target.value)}
                   className="pr-10"
                   required
@@ -212,6 +201,5 @@ export default function RegisterPage() {
           
         </CardContent>
       </Card>
-    </div>
   )
 }

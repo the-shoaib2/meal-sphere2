@@ -10,7 +10,7 @@ export async function GET(request: Request) {
 
   if (!paymentId) {
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/payments?error=missing-payment-id`,
+      `${process.env.NEXT_PUBLIC_APP_URL }/dashboard/payments?error=missing-payment-id`,
     )
   }
 
@@ -24,7 +24,7 @@ export async function GET(request: Request) {
 
     if (!bkashPayment) {
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/payments?error=payment-not-found`,
+        `${process.env.NEXT_PUBLIC_APP_URL }/dashboard/payments?error=payment-not-found`,
       )
     }
 
@@ -75,7 +75,7 @@ export async function GET(request: Request) {
       }
 
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/payments?success=true&paymentId=${paymentId}`,
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payments?success=true&paymentId=${paymentId}`,
       )
     } else {
       // Update the Bkash payment record
@@ -101,13 +101,13 @@ export async function GET(request: Request) {
       })
 
       return NextResponse.redirect(
-        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/payments?error=payment-failed`,
+        `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payments?error=payment-failed`,
       )
     }
   } catch (error) {
     console.error("Error processing Bkash callback:", error)
     return NextResponse.redirect(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/dashboard/payments?error=server-error`,
+      `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/payments?error=server-error`,
     )
   }
 }

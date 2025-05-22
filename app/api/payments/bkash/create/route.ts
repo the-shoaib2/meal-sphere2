@@ -51,7 +51,7 @@ export async function POST(request: Request) {
     })
 
     // Create a Bkash payment
-    const callbackURL = `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/payments/bkash/callback`
+    const callbackURL = `${process.env.NEXT_PUBLIC_APP_URL}/api/payments/bkash/callback`
     const bkashPayment = await createBkashPayment(Number(amount), invoiceId, callbackURL)
 
     // Store the Bkash payment ID in the database

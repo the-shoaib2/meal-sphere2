@@ -36,23 +36,21 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
-          return null
+          throw new Error("Email and password are required");
         }
 
         const user = await prisma.user.findUnique({
-          where: {
-            email: credentials.email,
-          },
-        })
+          where: { email: credentials.email },
+        });
 
         if (!user || !user.password) {
-          return null
+          throw new Error("Invalid email or password");
         }
 
-        const isPasswordValid = await bcrypt.compare(credentials.password, user.password)
+        const isPasswordValid = await bcrypt.compare(credentials.password, user.password);
 
         if (!isPasswordValid) {
-          return null
+          throw new Error("Invalid email or password");
         }
 
         return {
@@ -61,12 +59,13 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           image: user.image,
           role: user.role,
-        }
+        };
       },
     }),
   ],
   session: {
     strategy: "jwt",
+    maxAge: 2 * 30 * 24 * 60 * 60, // 60 days
   },
   pages: {
     signIn: "/login",
@@ -96,7 +95,7 @@ const handler = NextAuth({
   debug: process.env.NODE_ENV === 'development',
   cookies: {
     sessionToken: {
-      name: `__Secure-next-auth.session-token`,
+      name: `next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
@@ -104,11 +103,11 @@ const handler = NextAuth({
         secure: true
       }
     }
-  },
+      },
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
-  },
+    },
   pages: {
     signIn: "/login",
     error: "/login",
