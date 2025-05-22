@@ -1,0 +1,268 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String
+  email         String    @unique
+  emailVerified DateTime?
+  password      String?
+  image         String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  role          Role      @default(MEMBER)
+  language      String    @default("en")
+  
+  rooms         RoomMember[]
+  meals         Meal[]
+  payments      Payment[]
+  shoppingItems ShoppingItem[]
+  votes         Vote[]
+  notifications Notification[]
+  bkashPayments BkashPayment[]
+  marketDates   MarketDate[]
+  extraExpenses ExtraExpense[]
+  guestMeals    GuestMeal[]
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+model Room {
+  id          String      @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  isActive    Boolean     @default(true)
+  fineAmount  Float       @default(0)
+  fineEnabled Boolean     @default(false)
+  
+  members     RoomMember[]
+  meals       Meal[]
+  payments    Payment[]
+  shopping    ShoppingItem[]
+  votes       Vote[]
+  bkashPayments BkashPayment[]
+  marketDates MarketDate[]
+  extraExpenses ExtraExpense[]
+  guestMeals  GuestMeal[]
+}
+
+model RoomMember {
+  id        String   @id @default(cuid())
+  role      Role     @default(MEMBER)
+  joinedAt  DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, roomId])
+}
+
+model Meal {
+  id        String   @id @default(cuid())
+  date      DateTime
+  type      MealType
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  @@unique([userId, roomId, date, type])
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  CUSTOM
+}
+
+model GuestMeal {
+  id        String   @id @default(cuid())
+  date      DateTime
+  type      MealType
+  count     Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model ShoppingItem {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  date        DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  receiptUrl  String?
+  
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId      String
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model Payment {
+  id          String        @id @default(cuid())
+  amount      Float
+  date        DateTime
+  method      PaymentMethod
+  status      PaymentStatus @default(PENDING)
+  description String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId      String
+  room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  bkashPayment BkashPayment?
+}
+
+enum PaymentMethod {
+  BKASH
+  CASH
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+}
+
+model Vote {
+  id        String   @id @default(cuid())
+  type      VoteType
+  createdAt DateTime @default(now())
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  candidateId String?
+  
+  @@unique([userId, roomId, type])
+}
+
+enum VoteType {
+  MANAGER_ELECTION
+  MEAL_PREFERENCE
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum NotificationType {
+  MEAL_REMINDER
+  PAYMENT_DUE
+  VOTE_STARTED
+  VOTE_ENDED
+  MANAGER_CHANGED
+  SHOPPING_ADDED
+  MARKET_DATE_REMINDER
+  FINE_APPLIED
+  GUEST_MEAL_ADDED
+  CUSTOM
+}
+
+model BkashPayment {
+  id              String   @id @default(cuid())
+  paymentId       String   @unique
+  invoiceId       String
+  amount          Float
+  status          String
+  trxId           String?
+  customerMsisdn  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId          String
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  
+  paymentRecordId String   @unique
+  paymentRecord   Payment  @relation(fields: [paymentRecordId], references: [id], onDelete: Cascade)
+}
+
+model MarketDate {
+  id        String   @id @default(cuid())
+  date      DateTime
+  completed Boolean  @default(false)
+  fined     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model ExtraExpense {
+  id          String        @id @default(cuid())
+  description String
+  amount      Float
+  date        DateTime
+  type        ExpenseType
+  receiptUrl  String?
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  roomId      String
+  room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+enum ExpenseType {
+  UTILITY
+  RENT
+  INTERNET
+  CLEANING
+  MAINTENANCE
+  OTHER
+}
