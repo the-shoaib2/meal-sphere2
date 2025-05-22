@@ -32,6 +32,15 @@ model User {
   marketDates   MarketDate[]
   extraExpenses ExtraExpense[]
   guestMeals    GuestMeal[]
+
+  @@index([id])
+  @@index([email])
+  @@index([email ,password])
+  @@index([createdAt])
+  @@index([updatedAt])
+  @@index([role])
+  @@index([language])
+  @@index([emailVerified])
 }
 
 enum Role {

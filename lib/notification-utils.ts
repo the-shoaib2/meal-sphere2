@@ -1,5 +1,16 @@
 import prisma from "./prisma"
 
+export async function createNotification(userId: string, type: string, message: string) {
+  return prisma.notification.create({
+    data: {
+      userId,
+      type: type as any, // Type assertion since we know the type is valid
+      message,
+      read: false,
+    },
+  });
+}
+
 export async function createMealReminder(userId: string) {
   return prisma.notification.create({
     data: {
