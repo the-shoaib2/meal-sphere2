@@ -2,11 +2,54 @@ import { NextResponse } from "next/server"
 import { getToken } from "next-auth/jwt"
 import type { NextRequest } from "next/server"
 
+// Define protected routes that require authentication
+const protectedRoutes = [
+  "/dashboard",
+  "/dashboard/",
+  "/voting",
+  "/voting/",
+  "/meals",
+  "/meals/",
+  "/shopping",
+  "/shopping/",
+  "/expenses",
+  "/expenses/",
+  "/payments",
+  "/payments/",
+  "/calculations",
+  "/calculations/",
+  "/analytics",
+  "/analytics/",
+  "/market",
+  "/market/",
+  "/excel",
+  "/excel/",
+  "/notifications",
+  "/notifications/",
+  "/settings",
+  "/settings/"
+]
+
+// Define public paths that don't require authentication
+const publicPaths = [
+  "/",
+  "/login",
+  "/register",
+  "/api/auth"
+]
+
 export async function middleware(request: NextRequest) {
   const path = request.nextUrl.pathname
 
-  // Define public paths that don't require authentication
-  const isPublicPath = path === "/" || path === "/login" || path === "/register" || path.startsWith("/api/auth")
+  // Check if current path is public
+  const isPublicPath = publicPaths.some(publicPath => 
+    path === publicPath || path.startsWith(publicPath)
+  )
+
+  // Check if current path is protected
+  const isProtectedRoute = protectedRoutes.some(route => 
+    path === route || path.startsWith(route + '/')
+  )
 
   // Get the session token
   const token = await getToken({
@@ -14,12 +57,13 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   })
 
-  // Redirect logic
-  if (!token && !isPublicPath) {
+  // Redirect logic for protected routes
+  if (isProtectedRoute && !token) {
     // Redirect to login if trying to access a protected route without being logged in
-    return NextResponse.redirect(new URL("/login", request.url))
+    return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(path)}`, request.url))
   }
 
+  // Redirect if logged in and trying to access auth pages
   if (token && (path === "/login" || path === "/register")) {
     // Redirect to dashboard if already logged in and trying to access login/register
     return NextResponse.redirect(new URL("/dashboard", request.url))

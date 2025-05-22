@@ -110,7 +110,7 @@ export function AppSidebar({
   ]
 
   const settingsItems: NavItem[] = [
-    { title: 'Profile', icon: <User className="h-4 w-4" /> },
+    { title: 'settings', icon: <User className="h-4 w-4" /> },
     { title: 'Notifications', icon: <Bell className="h-4 w-4" /> },
     { title: 'Settings', icon: <Settings className="h-4 w-4" /> },
   ]
