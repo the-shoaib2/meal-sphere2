@@ -2,7 +2,7 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Bell } from "lucide-react"
+import { Bell, BellRing } from "lucide-react"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
@@ -66,12 +66,16 @@ export function NotificationBell() {
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="outline" size="icon" className="relative">
-          <Bell className="h-4 w-4" />
-          {unreadCount > 0 && (
-            <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
-              {unreadCount}
-            </span>
+        <Button variant="ghost" size="icon" className="relative group rounded-full active:scale-95">
+          {unreadCount > 0 ? (
+            <div className="relative">
+              <BellRing className={`h-5 w-5 text-primary ${!open ? 'animate-pulse' : ''}`} />
+              <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full bg-destructive text-[11px] font-bold text-destructive-foreground ring-2 ring-background">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            </div>
+          ) : (
+            <Bell className="h-5 w-5 text-muted-foreground group-hover:text-foreground transition-colors" />
           )}
           <span className="sr-only">Notifications</span>
         </Button>

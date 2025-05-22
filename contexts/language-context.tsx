@@ -26,6 +26,7 @@ const en = {
   "nav.excel": "Excel",
   "nav.profile": "Profile",
   "nav.notifications": "Notifications",
+  "nav.settings": "Settings",
   "nav.logout": "Logout",
 
   // Auth
@@ -152,6 +153,7 @@ const bn = {
   "nav.excel": "এক্সেল",
   "nav.profile": "প্রোফাইল",
   "nav.notifications": "নোটিফিকেশন",
+  "nav.settings": "সেটিংস",
   "nav.logout": "লগআউট",
 
   // Auth

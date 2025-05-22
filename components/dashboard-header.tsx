@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Menu, Search, Utensils } from "lucide-react"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet"
 import { signOut, useSession } from "next-auth/react"
 import { NotificationBell } from "./notification-bell"
 import { useMobile } from "@/hooks/use-mobile"
@@ -22,7 +22,7 @@ export default function DashboardHeader() {
   const isMobile = useMobile()
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-background/95 backdrop-blur-sm px-4 md:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background/95 backdrop-blur-lg px-4 md:px-6">
       <Sheet>
         <SheetTrigger asChild>
           <Button variant="outline" size="icon" className="md:hidden">
@@ -30,14 +30,13 @@ export default function DashboardHeader() {
             <span className="sr-only">Toggle navigation menu</span>
           </Button>
         </SheetTrigger>
-        <SheetContent side="left" className="md:hidden">
-          <div className="flex h-14 items-center px-4">
-            <Link href="/" className="flex items-center gap-2 font-semibold">
+        <SheetContent side="left" className="md:hidden p-0">
+          <SheetHeader className="border-b px-4 py-3 text-left">
+            <SheetTitle className="flex items-center gap-2">
               <Utensils className="h-6 w-6" />
               <span>MealSphere</span>
-            </Link>
-          </div>
-          
+            </SheetTitle>
+          </SheetHeader>
         </SheetContent>
       </Sheet>
       <Link href="/" className="flex items-center gap-2 font-semibold">
@@ -45,13 +44,13 @@ export default function DashboardHeader() {
         <span className={isMobile ? "sr-only" : ""}>MealSphere</span>
       </Link>
       <div className="flex-1 flex justify-center">
-        <form className="hidden md:flex w-full max-w-2xl">
+        <form className="hidden rounded-full md:flex w-full max-w-[450px] ">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               type="search"
               placeholder="Search meals, members, or rooms..."
-              className="w-full appearance-none bg-background pl-9 pr-4 shadow-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+              className="w-full appearance-none bg-background pl-9 pr-4 shadow-none transition-all duration-200 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-full"
             />
           </div>
         </form>
