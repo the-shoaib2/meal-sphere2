@@ -3,8 +3,10 @@ import { NextAuthOptions, getServerSession, type DefaultSession } from "next-aut
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
-import prisma from "@/lib/prisma"
+import { PrismaClient } from "@prisma/client"
 import NextAuth from "next-auth/next"
+
+const prisma = new PrismaClient()
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -20,12 +22,11 @@ declare module "next-auth" {
   }
 }
 
-// Initialize Prisma Adapter
-const prismaAdapter = PrismaAdapter(prisma)
-
-// Configure NextAuth options
+// Ensure the Prisma client is properly imported and used
 export const authOptions: NextAuthOptions = {
-  adapter: prismaAdapter,
+  adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -68,7 +69,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 2 * 30 * 24 * 60 * 60, // 60 days
   },
   pages: {
     signIn: "/login",
@@ -77,17 +78,17 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        token.id = user.id
+        token.role = user.role
       }
-      return token;
+      return token
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.id = token.id as string
+        session.user.role = token.role as string
       }
-      return session;
+      return session
     },
   },
   cookies: {
@@ -98,21 +99,14 @@ export const authOptions: NextAuthOptions = {
         sameSite: 'lax',
         path: '/',
         secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : undefined,
       },
     },
   },
-};
-
-// Initialize NextAuth handler
-export default NextAuth(authOptions);
-
-// Export the handler for GET and POST methods
-export const { GET, POST } = {
-  GET: NextAuth(authOptions).GET,
-  POST: NextAuth(authOptions).POST,
-};
-
-// Helper to get the auth session on the server
-export async function getServerAuthSession() {
-  return await getServerSession(authOptions);
 }
+
+const handler = NextAuth(authOptions)
+
+export { handler as GET, handler as POST }
+
+export const getServerAuthSession = () => getServerSession(authOptions)
