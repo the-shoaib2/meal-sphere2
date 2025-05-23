@@ -1,6 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -11,109 +8,91 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  name          String
-  email         String    @unique
-  emailVerified DateTime?
-  password      String?
-  image         String?
-  isActive      Boolean   @default(true)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  role          Role      @default(MEMBER)
-  language      String    @default("en")
-  
-  rooms         RoomMember[]
-  meals         Meal[]
-  payments      Payment[]
-  shoppingItems ShoppingItem[]
-  votes         Vote[]
-  notifications Notification[]
-  bkashPayments BkashPayment[]
-  marketDates   MarketDate[]
-  extraExpenses ExtraExpense[]
-  guestMeals    GuestMeal[]
-  accounts      Account[]
-  sessions      Session[]
-  resetToken    String?   @unique
+  id               String         @id @default(cuid())
+  name             String
+  email            String         @unique
+  emailVerified    DateTime?
+  password         String?
+  image            String?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  role             Role           @default(MEMBER)
+  language         String         @default("en")
+  isActive         Boolean        @default(true)
+  resetToken       String?        @unique
   resetTokenExpiry DateTime?
+  accounts         Account[]
+  bkashPayments    BkashPayment[]
+  extraExpenses    ExtraExpense[]
+  guestMeals       GuestMeal[]
+  marketDates      MarketDate[]
+  meals            Meal[]
+  notifications    Notification[]
+  payments         Payment[]
+  rooms            RoomMember[]
+  sessions         Session[]
+  shoppingItems    ShoppingItem[]
+  votes            Vote[]
 
   @@index([email])
   @@index([role, isActive])
   @@index([createdAt, updatedAt])
   @@index([emailVerified, isActive])
-  @@index([email, isActive])
-  @@index([name])
-}
-
-enum Role {
-  ADMIN
-  MANAGER
-  MEMBER
 }
 
 model Room {
-  id          String      @id @default(cuid())
-  name        String
-  description String?
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
-  isActive    Boolean     @default(true)
-  fineAmount  Float       @default(0)
-  fineEnabled Boolean     @default(false)
-  
+  id            String         @id @default(cuid())
+  name          String         @unique
+  description   String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  isActive      Boolean        @default(true)
+  fineAmount    Float          @default(0)
+  fineEnabled   Boolean        @default(false)
+  bkashPayments BkashPayment[]
+  extraExpenses ExtraExpense[]
+  guestMeals    GuestMeal[]
+  marketDates   MarketDate[]
+  meals         Meal[]
+  payments      Payment[]
+  members       RoomMember[]
+  shopping      ShoppingItem[]
+  votes         Vote[]
+
   @@index([isActive])
   @@index([createdAt])
-  @@index([name, isActive]) // Add this for better room queries
-  @@unique([name])
-  
-  members     RoomMember[]
-  meals       Meal[]
-  payments    Payment[]
-  shopping    ShoppingItem[]
-  votes       Vote[]
-  bkashPayments BkashPayment[]
-  marketDates MarketDate[]
-  extraExpenses ExtraExpense[]
-  guestMeals  GuestMeal[]
 }
 
 model RoomMember {
-  id        String   @id @default(cuid())
-  role      Role     @default(MEMBER)
-  joinedAt  DateTime @default(now())
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  roomId    String
-  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
+  id       String   @id @default(cuid())
+  role     Role     @default(MEMBER)
+  joinedAt DateTime @default(now())
+  userId   String
+  roomId   String
+  room     Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
   @@unique([userId, roomId])
-  @@index([roomId, role]) 
-  @@index([joinedAt]) 
-  @@index([userId, role]) // Add this for user role queries
+  @@index([roomId, role])
+  @@index([joinedAt])
 }
 
-// Add NextAuth required models if missing
 model Account {
   id                String  @id @default(cuid())
   userId            String
   type              String
   provider          String
   providerAccountId String
-  refresh_token     String? @db.Text
-  access_token      String? @db.Text
+  refresh_token     String?
+  access_token      String?
   expires_at        Int?
   token_type        String?
   scope             String?
-  id_token          String? @db.Text
+  id_token          String?
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
-  @@index([userId])
 }
 
 model Session {
@@ -122,9 +101,6 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId])
-  @@index([expires])
 }
 
 model VerificationToken {
@@ -133,7 +109,6 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-  @@index([expires])
 }
 
 model Meal {
@@ -142,24 +117,15 @@ model Meal {
   type      MealType
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   roomId    String
   room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  @@unique([userId, roomId, date, type])
-  @@index([roomId, date]) 
-  @@index([userId, date]) 
-  @@index([type, date]) 
-}
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-enum MealType {
-  BREAKFAST
-  LUNCH
-  DINNER
-  CUSTOM
+  @@unique([userId, roomId, date, type])
+  @@index([roomId, date])
+  @@index([userId, date])
+  @@index([type, date])
 }
 
 model GuestMeal {
@@ -169,15 +135,13 @@ model GuestMeal {
   count     Int      @default(1)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   roomId    String
   room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  @@index([roomId, date]) 
-  @@index([userId, date]) 
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, date])
+  @@index([userId, date])
 }
 
 model ShoppingItem {
@@ -188,39 +152,121 @@ model ShoppingItem {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   receiptUrl  String?
-  
   userId      String
-  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   roomId      String
   room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  @@index([roomId, date]) 
-  @@index([amount]) 
-  @@index([userId, date]) 
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, date])
+  @@index([amount])
+  @@index([userId, date])
 }
 
 model Payment {
-  id          String        @id @default(cuid())
+  id           String        @id @default(cuid())
+  amount       Float
+  date         DateTime
+  method       PaymentMethod
+  status       PaymentStatus @default(PENDING)
+  description  String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  userId       String
+  roomId       String
+  bkashPayment BkashPayment?
+  room         Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([roomId, status, date])
+  @@index([userId, status, date])
+  @@index([method, status])
+}
+
+model Vote {
+  id          String   @id @default(cuid())
+  type        VoteType
+  createdAt   DateTime @default(now())
+  userId      String
+  roomId      String
+  candidateId String?
+  room        Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, roomId, type])
+  @@index([roomId, type, candidateId])
+  @@index([createdAt])
+}
+
+model Notification {
+  id        String           @id @default(cuid())
+  type      NotificationType
+  message   String
+  read      Boolean          @default(false)
+  createdAt DateTime         @default(now())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
+}
+
+model BkashPayment {
+  id              String   @id @default(cuid())
+  paymentId       String   @unique
+  invoiceId       String
+  amount          Float
+  status          String
+  trxId           String?
+  customerMsisdn  String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  userId          String
+  roomId          String
+  paymentRecordId String   @unique
+  paymentRecord   Payment  @relation(fields: [paymentRecordId], references: [id], onDelete: Cascade)
+  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model MarketDate {
+  id        String   @id @default(cuid())
+  date      DateTime
+  completed Boolean  @default(false)
+  fined     Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String
+  roomId    String
+  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ExtraExpense {
+  id          String      @id @default(cuid())
+  description String
   amount      Float
   date        DateTime
-  method      PaymentMethod
-  status      PaymentStatus @default(PENDING)
-  description String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
+  type        ExpenseType
+  receiptUrl  String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
   userId      String
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
   roomId      String
-  room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  bkashPayment BkashPayment?
-  
-  @@index([roomId, status, date]) 
-  @@index([userId, status, date]) 
-  @@index([method, status]) 
+  room        Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  MEMBER
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  DINNER
+  CUSTOM
 }
 
 enum PaymentMethod {
@@ -235,41 +281,9 @@ enum PaymentStatus {
   FAILED
 }
 
-model Vote {
-  id        String   @id @default(cuid())
-  type      VoteType
-  createdAt DateTime @default(now())
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  roomId    String
-  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  candidateId String?
-  
-  @@unique([userId, roomId, type])
-  @@index([roomId, type, candidateId]) 
-  @@index([createdAt]) 
-}
-
 enum VoteType {
   MANAGER_ELECTION
   MEAL_PREFERENCE
-}
-
-model Notification {
-  id        String           @id @default(cuid())
-  type      NotificationType
-  message   String
-  read      Boolean          @default(false)
-  createdAt DateTime         @default(now())
-  
-  userId    String
-  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  @@index([userId, read]) 
-  @@index([createdAt]) 
 }
 
 enum NotificationType {
@@ -283,59 +297,6 @@ enum NotificationType {
   FINE_APPLIED
   GUEST_MEAL_ADDED
   CUSTOM
-}
-
-model BkashPayment {
-  id              String   @id @default(cuid())
-  paymentId       String   @unique
-  invoiceId       String
-  amount          Float
-  status          String
-  trxId           String?
-  customerMsisdn  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  roomId          String
-  room            Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-  
-  paymentRecordId String   @unique
-  paymentRecord   Payment  @relation(fields: [paymentRecordId], references: [id], onDelete: Cascade)
-}
-
-model MarketDate {
-  id        String   @id @default(cuid())
-  date      DateTime
-  completed Boolean  @default(false)
-  fined     Boolean  @default(false)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  
-  userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  roomId    String
-  room      Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
-}
-
-model ExtraExpense {
-  id          String        @id @default(cuid())
-  description String
-  amount      Float
-  date        DateTime
-  type        ExpenseType
-  receiptUrl  String?
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  
-  userId      String
-  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  
-  roomId      String
-  room        Room          @relation(fields: [roomId], references: [id], onDelete: Cascade)
 }
 
 enum ExpenseType {

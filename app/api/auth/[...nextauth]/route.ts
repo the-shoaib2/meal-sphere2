@@ -75,6 +75,18 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
+  jwt: {
+    secret: process.env.NEXTAUTH_SECRET,
+    // You can add more JWT options here if needed
+  },
+  events: {
+    async signIn({ user }) {
+      console.log('User signed in:', user?.email);
+    },
+    async signOut({ token }) {
+      console.log('User signed out:', token?.email);
+    }
+  },
   pages: {
     signIn: "/login",
     signOut: "/login",
@@ -128,6 +140,17 @@ export const authOptions: NextAuthOptions = {
     },
   },
   debug: process.env.NODE_ENV === 'development',
+  logger: {
+    error(code, metadata) {
+      console.error('Auth error:', { code, metadata });
+    },
+    warn(code) {
+      console.warn('Auth warning:', code);
+    },
+    debug(code, metadata) {
+      console.log('Auth debug:', { code, metadata });
+    },
+  },
   secret: process.env.NEXTAUTH_SECRET,
   cookies: {
     sessionToken: {
