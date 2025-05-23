@@ -3,10 +3,8 @@ import { NextAuthOptions, getServerSession, type DefaultSession } from "next-aut
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
 import NextAuth from "next-auth/next"
-
-const prisma = new PrismaClient()
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -23,8 +21,12 @@ declare module "next-auth" {
 }
 
 // Ensure the Prisma client is properly imported and used
+// Configure NextAuth
+const adapter = PrismaAdapter(prisma)
+
+// Ensure the Prisma client is properly imported and used
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: adapter,
   secret: process.env.NEXTAUTH_SECRET,
   debug: process.env.NODE_ENV === 'development',
   providers: [
