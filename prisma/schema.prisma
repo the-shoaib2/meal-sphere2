@@ -33,15 +33,17 @@ model User {
   marketDates   MarketDate[]
   extraExpenses ExtraExpense[]
   guestMeals    GuestMeal[]
-  accounts      Account[] // Add this
-  sessions      Session[] // Add this
+  accounts      Account[]
+  sessions      Session[]
+  resetToken    String?   @unique
+  resetTokenExpiry DateTime?
 
   @@index([email])
   @@index([role, isActive])
   @@index([createdAt, updatedAt])
   @@index([emailVerified, isActive])
-  @@index([email, isActive]) // Add this for better auth queries
-  @@index([name]) // Add this for search functionality
+  @@index([email, isActive])
+  @@index([name])
 }
 
 enum Role {
