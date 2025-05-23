@@ -3,10 +3,8 @@ import { NextAuthOptions, getServerSession, type DefaultSession } from "next-aut
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
-import { PrismaClient } from "@prisma/client"
+import { prisma } from "@/lib/prisma"
 import NextAuth from "next-auth/next"
-
-const prisma = new PrismaClient()
 
 // Extend the built-in session types
 declare module "next-auth" {
@@ -24,9 +22,7 @@ declare module "next-auth" {
 
 // Ensure the Prisma client is properly imported and used
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
+  adapter: PrismaAdapter(prisma) as any,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -91,21 +87,48 @@ export const authOptions: NextAuthOptions = {
       return session
     },
   },
+}
+
+const handler = NextAuth({
+  ...authOptions,
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV === 'development',
   cookies: {
     sessionToken: {
-      name: `__Secure-next-auth.session-token`,
+      name: `next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? '.yourdomain.com' : undefined,
+        secure: true
+      }
+    }
       },
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    },
+  pages: {
+    signIn: "/login",
+    error: "/login",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.role = user.role
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (token && session.user) {
+        session.user.id = token.id as string
+        session.user.role = token.role as string
+      }
+      return session
     },
   },
-}
-
-const handler = NextAuth(authOptions)
+})
 
 export { handler as GET, handler as POST }
 
