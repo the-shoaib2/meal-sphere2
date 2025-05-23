@@ -29,6 +29,15 @@ declare module "next-auth/jwt" {
   }
 }
 
+// Helper to get the correct URL based on environment
+const getBaseUrl = () => {
+  if (process.env.VERCEL_URL) return `https://${process.env.VERCEL_URL}`; // Automatically set by Vercel
+  if (process.env.NEXTAUTH_URL) return process.env.NEXTAUTH_URL;
+  return 'http://localhost:3000';
+};
+
+const baseUrl = getBaseUrl();
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
@@ -157,7 +166,7 @@ export const authOptions: NextAuthOptions = {
       return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: true, // Enable debug in production to help diagnose issues
   logger: {
     error(code, metadata) {
       console.error('Auth error:', { code, metadata });
@@ -177,7 +186,8 @@ export const authOptions: NextAuthOptions = {
         httpOnly: true,
         sameSite: 'lax' as const,
         path: '/',
-        secure: process.env.NODE_ENV === 'production'
+        secure: process.env.NODE_ENV === 'production',
+        domain: process.env.NODE_ENV === 'production' ? '.meal-sphere.vercel.app' : undefined
       }
     }
   }
