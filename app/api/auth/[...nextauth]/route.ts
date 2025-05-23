@@ -40,6 +40,8 @@ const baseUrl = getBaseUrl();
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  secret: process.env.NEXTAUTH_SECRET,
+  useSecureCookies: process.env.NODE_ENV === 'production',
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -102,6 +104,7 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 days
     updateAge: 24 * 60 * 60, // 24 hours
   },
+
   jwt: {
     secret: process.env.NEXTAUTH_SECRET,
     // You can add more JWT options here if needed
@@ -120,7 +123,8 @@ export const authOptions: NextAuthOptions = {
     error: "/login",
   },
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
+      // Initial sign in
       if (user) {
         token.id = user.id;
         token.role = user.role || Role.MEMBER;
@@ -163,7 +167,11 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     async redirect({ url, baseUrl }) {
-      return url.startsWith(baseUrl) ? url : baseUrl;
+      // Allows relative callback URLs
+      if (url.startsWith('/')) return `${baseUrl}${url}`
+      // Allows callback URLs on the same origin
+      else if (new URL(url).origin === baseUrl) return url
+      return baseUrl
     },
   },
   debug: true, // Enable debug in production to help diagnose issues
@@ -178,7 +186,6 @@ export const authOptions: NextAuthOptions = {
       console.log('Auth debug:', { code, metadata });
     },
   },
-  secret: process.env.NEXTAUTH_SECRET,
   cookies: {
     sessionToken: {
       name: `__Secure-next-auth.session-token`,

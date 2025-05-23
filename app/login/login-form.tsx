@@ -35,11 +35,14 @@ export default function LoginForm() {
     try {
       const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
       
-      const result = await signIn("credentials", {
-        email,
+      const result = await signIn('credentials', {
+        email: email.trim(),
         password,
         redirect: false,
+        callbackUrl
       })
+
+      console.log('Sign in result:', result)
       
       if (!result) {
         throw new Error('No response from server')
@@ -53,7 +56,7 @@ export default function LoginForm() {
       // If we get here, login was successful
       toast.success('Login successful!', { id: toastId })
       
-      // Force a hard redirect to ensure session is properly loaded
+      // Use window.location.href for a full page reload to ensure session is set
       window.location.href = callbackUrl
       
     } catch (error) {
