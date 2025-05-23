@@ -97,7 +97,7 @@ export function DashboardSidebar({ className }: React.HTMLAttributes<HTMLElement
       icon: Bell,
     },
     {
-      title: t("nav.settings"),
+      title: t("nav.profile"),
       href: "/settings",
       icon: Settings,
     },
