@@ -33,19 +33,30 @@ export default function LoginForm() {
     const toastId = toast.loading('Signing in...')
 
     try {
-      const result = await signIn("credentials", {
+      const result = await signIn<"credentials">("credentials", {
         email,
         password,
         redirect: false,
+        callbackUrl: searchParams?.get('callbackUrl') || '/dashboard'
       })
       
-      if (result?.error) {
+      if (!result) {
+        throw new Error('No response from server')
+      }
+      
+      if (result.error) {
         toast.error('Invalid email or password', { id: toastId })
-      } else {
-        toast.success('Login successful!', { id: toastId })
-        router.push('/dashboard')
         return
       }
+      
+      // If we get here, login was successful
+      toast.success('Login successful!', { id: toastId })
+      
+      // Use window.location to ensure full page reload and session update
+      const callbackUrl = typeof result.url === 'string' ? result.url : '/dashboard'
+      window.location.href = callbackUrl
+      return
+      
     } catch (error) {
       console.error("Login failed:", error)
       toast.error('An error occurred. Please try again.', { id: toastId })
@@ -78,10 +89,21 @@ export default function LoginForm() {
               onClick={async () => {
                 try {
                   setIsGoogleLoading(true)
-                  await signIn("google", { callbackUrl: "/dashboard" })
+                  const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
+                  const result = await signIn("google", { 
+                    redirect: false,
+                    callbackUrl 
+                  })
+                  
+                  if (result?.error) {
+                    throw new Error(result.error)
+                  }
+                  
+                  // If we get here, the OAuth flow should handle the redirect
+                  // No need to do anything else here
                 } catch (error) {
                   console.error("Google sign in error:", error)
-                  toast.error("Failed to sign in with Google")
+                  toast.error(error instanceof Error ? error.message : "Failed to sign in with Google")
                 } finally {
                   setIsGoogleLoading(false)
                 }

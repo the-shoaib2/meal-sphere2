@@ -1,28 +1,36 @@
 import { PrismaAdapter } from "@next-auth/prisma-adapter"
-import { NextAuthOptions, getServerSession, type DefaultSession } from "next-auth"
+import { NextAuthOptions, getServerSession, type DefaultSession, type DefaultUser } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/prisma"
-import NextAuth from "next-auth/next"
+import { PrismaClient, Role } from "@prisma/client"
+import NextAuth from "next-auth"
 
-// Extend the built-in session types
+const prisma = new PrismaClient()
+
 declare module "next-auth" {
+  interface User extends DefaultUser {
+    id: string;
+    role: Role;
+  }
+
   interface Session extends DefaultSession {
     user: {
       id: string;
-      role: string;
+      role: Role;
     } & DefaultSession["user"]
-  }
-
-  interface User {
-    role: string;
   }
 }
 
-// Ensure the Prisma client is properly imported and used
+declare module "next-auth/jwt" {
+  interface JWT {
+    id: string;
+    role: Role;
+  }
+}
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: PrismaAdapter(prisma),
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -57,7 +65,6 @@ export const authOptions: NextAuthOptions = {
           id: user.id,
           email: user.email,
           name: user.name,
-          image: user.image,
           role: user.role,
         };
       },
@@ -66,59 +73,73 @@ export const authOptions: NextAuthOptions = {
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
   },
   pages: {
     signIn: "/login",
+    signOut: "/login",
     error: "/login",
-  },
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production',
-        domain: process.env.NODE_ENV === 'production' ? process.env.NEXTAUTH_URL?.replace(/^https?:\/\//, '') : undefined
-      }
-    },
-    callbackUrl: {
-      name: `__Secure-next-auth.callback-url`,
-      options: {
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production'
-      }
-    },
-    csrfToken: {
-      name: `__Host-next-auth.csrf-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: process.env.NODE_ENV === 'production'
-      }
-    }
   },
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id;
-        token.role = user.role;
+        token.role = user.role || Role.MEMBER;
       }
       return token;
     },
     async session({ session, token }) {
-      if (token && session.user) {
+      if (session?.user) {
         session.user.id = token.id as string;
-        session.user.role = token.role as string;
+        session.user.role = token.role as Role;
       }
       return session;
+    },
+    async signIn({ user, account, profile }) {
+      if (account?.provider === 'google' && profile) {
+        try {
+          const email = user.email;
+          if (!email) return false;
+
+          const existingUser = await prisma.user.findUnique({
+            where: { email },
+          });
+
+          if (!existingUser) {
+            await prisma.user.create({
+              data: {
+                email,
+                name: user.name || (profile as any).name || email.split('@')[0],
+                image: user.image || (profile as any).picture,
+                role: Role.MEMBER,
+                emailVerified: new Date(),
+              },
+            });
+          }
+        } catch (error) {
+          console.error('Error in signIn callback:', error);
+          return false;
+        }
+      }
+      return true;
+    },
+    async redirect({ url, baseUrl }) {
+      return url.startsWith(baseUrl) ? url : baseUrl;
     },
   },
   debug: process.env.NODE_ENV === 'development',
   secret: process.env.NEXTAUTH_SECRET,
-  useSecureCookies: process.env.NODE_ENV === 'production',
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax' as const,
+        path: '/',
+        secure: process.env.NODE_ENV === 'production'
+      }
+    }
+  }
 }
 
 const handler = NextAuth(authOptions)
