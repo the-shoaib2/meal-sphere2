@@ -33,12 +33,15 @@ model User {
   marketDates   MarketDate[]
   extraExpenses ExtraExpense[]
   guestMeals    GuestMeal[]
-
+  accounts      Account[] // Add this
+  sessions      Session[] // Add this
 
   @@index([email])
   @@index([role, isActive])
   @@index([createdAt, updatedAt])
   @@index([emailVerified, isActive])
+  @@index([email, isActive]) // Add this for better auth queries
+  @@index([name]) // Add this for search functionality
 }
 
 enum Role {
@@ -59,6 +62,7 @@ model Room {
   
   @@index([isActive])
   @@index([createdAt])
+  @@index([name, isActive]) // Add this for better room queries
   @@unique([name])
   
   members     RoomMember[]
@@ -86,6 +90,48 @@ model RoomMember {
   @@unique([userId, roomId])
   @@index([roomId, role]) 
   @@index([joinedAt]) 
+  @@index([userId, role]) // Add this for user role queries
+}
+
+// Add NextAuth required models if missing
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@index([userId])
+  @@index([expires])
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+  @@index([expires])
 }
 
 model Meal {

@@ -5,29 +5,18 @@ import type { NextRequest } from "next/server"
 // Define protected routes that require authentication
 const protectedRoutes = [
   "/dashboard",
-  "/dashboard/",
   "/voting",
-  "/voting/",
   "/meals",
-  "/meals/",
   "/shopping",
-  "/shopping/",
   "/expenses",
-  "/expenses/",
   "/payments",
-  "/payments/",
   "/calculations",
-  "/calculations/",
   "/analytics",
-  "/analytics/",
   "/market",
-  "/market/",
   "/excel",
-  "/excel/",
   "/notifications",
-  "/notifications/",
   "/settings",
-  "/settings/"
+  "/profile"
 ]
 
 // Define public paths that don't require authentication
@@ -35,7 +24,9 @@ const publicPaths = [
   "/",
   "/login",
   "/register",
-  "/api/auth"
+  "/api/auth",
+  "/forgot-password",
+  "/reset-password"
 ]
 
 export async function middleware(request: NextRequest) {
@@ -43,12 +34,12 @@ export async function middleware(request: NextRequest) {
 
   // Check if current path is public
   const isPublicPath = publicPaths.some(publicPath => 
-    path === publicPath || path.startsWith(publicPath)
+    path === publicPath || path.startsWith(publicPath + "/")
   )
 
   // Check if current path is protected
   const isProtectedRoute = protectedRoutes.some(route => 
-    path === route || path.startsWith(route + '/')
+    path === route || path.startsWith(route + "/")
   )
 
   // Get the session token
@@ -59,13 +50,13 @@ export async function middleware(request: NextRequest) {
 
   // Redirect logic for protected routes
   if (isProtectedRoute && !token) {
-    // Redirect to login if trying to access a protected route without being logged in
-    return NextResponse.redirect(new URL(`/login?callbackUrl=${encodeURIComponent(path)}`, request.url))
+    const loginUrl = new URL("/login", request.url)
+    loginUrl.searchParams.set("callbackUrl", path)
+    return NextResponse.redirect(loginUrl)
   }
 
   // Redirect if logged in and trying to access auth pages
   if (token && (path === "/login" || path === "/register")) {
-    // Redirect to dashboard if already logged in and trying to access login/register
     return NextResponse.redirect(new URL("/dashboard", request.url))
   }
 
@@ -74,5 +65,7 @@ export async function middleware(request: NextRequest) {
 
 // Configure which paths the middleware should run on
 export const config = {
-  matcher: ["/((?!_next/static|_next/image|favicon.ico|.*\\.png$).*)"],
+  matcher: [
+    "/((?!_next/static|_next/image|favicon.ico|.*\\.png$|.*\\.jpg$|.*\\.jpeg$|.*\\.gif$|.*\\.svg$).*)",
+  ],
 }

@@ -1,5 +1,9 @@
 "use client"
 
+import { getServerSession } from "next-auth/next"
+import { authOptions } from "@/app/api/auth/[...nextauth]/route"
+import { redirect } from "next/navigation"
+import { prisma } from "@/lib/prisma"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { 
@@ -10,7 +14,29 @@ import {
   Users
 } from "lucide-react"
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const session = await getServerSession(authOptions)
+
+  if (!session?.user?.email) {
+    redirect("/login")
+  }
+
+  const user = await prisma.user.findUnique({
+    where: {
+      email: session.user.email,
+    },
+    include: {
+      rooms: {
+        include: {
+          room: true
+        }
+      }
+    }
+  })
+
+  if (!user) {
+    redirect("/login")
+  }
 
   return (
     <div className="space-y-6">
