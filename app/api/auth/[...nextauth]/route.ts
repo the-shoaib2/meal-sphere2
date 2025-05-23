@@ -3,7 +3,7 @@ import { NextAuthOptions, getServerSession, type DefaultSession } from "next-aut
 import CredentialsProvider from "next-auth/providers/credentials"
 import GoogleProvider from "next-auth/providers/google"
 import bcrypt from "bcryptjs"
-import { prisma } from "@/lib/prisma"
+import prisma from "@/lib/prisma"
 import NextAuth from "next-auth/next"
 
 // Extend the built-in session types
@@ -20,9 +20,12 @@ declare module "next-auth" {
   }
 }
 
-// Ensure the Prisma client is properly imported and used
+// Initialize Prisma Adapter
+const prismaAdapter = PrismaAdapter(prisma)
+
+// Configure NextAuth options
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as any,
+  adapter: prismaAdapter,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
@@ -65,7 +68,7 @@ export const authOptions: NextAuthOptions = {
   ],
   session: {
     strategy: "jwt",
-    maxAge: 2 * 30 * 24 * 60 * 60, // 60 days
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   pages: {
     signIn: "/login",
@@ -74,62 +77,42 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
-        token.role = user.role
+        token.id = user.id;
+        token.role = user.role;
       }
-      return token
+      return token;
     },
     async session({ session, token }) {
       if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role as string
+        session.user.id = token.id as string;
+        session.user.role = token.role as string;
       }
-      return session
+      return session;
     },
   },
-}
-
-const handler = NextAuth({
-  ...authOptions,
-  secret: process.env.NEXTAUTH_SECRET,
-  debug: process.env.NODE_ENV === 'development',
   cookies: {
     sessionToken: {
-      name: `next-auth.session-token`,
+      name: `__Secure-next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: 'lax',
         path: '/',
-        secure: true
-      }
-    }
+        secure: process.env.NODE_ENV === 'production',
       },
-  session: {
-    strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-    },
-  pages: {
-    signIn: "/login",
-    error: "/login",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-        token.role = user.role
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string
-        session.user.role = token.role as string
-      }
-      return session
     },
   },
-})
+};
 
-export { handler as GET, handler as POST }
+// Initialize NextAuth handler
+export default NextAuth(authOptions);
 
-export const getServerAuthSession = () => getServerSession(authOptions)
+// Export the handler for GET and POST methods
+export const { GET, POST } = {
+  GET: NextAuth(authOptions).GET,
+  POST: NextAuth(authOptions).POST,
+};
+
+// Helper to get the auth session on the server
+export async function getServerAuthSession() {
+  return await getServerSession(authOptions);
+}
