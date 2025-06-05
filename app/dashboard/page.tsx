@@ -22,22 +22,22 @@ export default async function DashboardPage() {
   }
 
   const user = await prisma.user.findUnique({
-    where: {
-      email: session.user.email,
-    },
-    include: {
-      rooms: {
-        include: {
-          room: true
+      where: {
+        email: session.user.email,
+      },
+      include: {
+        rooms: {
+          include: {
+            room: true
+          }
         }
       }
-    }
   })
 
   if (!user) {
     redirect("/login")
   }
-
+  
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">

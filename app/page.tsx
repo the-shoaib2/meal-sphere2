@@ -1,23 +1,44 @@
-"use client";
+
+"use client"
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowRight, Utensils, Users, CreditCard, Bell } from "lucide-react"
-import { useSession } from "next-auth/react"
-import { UserAvatar } from "@/components/user-avatar"
+
+import { ArrowRight, Utensils, Users, CreditCard, Bell, User } from "lucide-react"
+import { signOut, useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function Home() {
-  const { data: session } = useSession();
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false })
+    router.push('/')
+  }
   return (
     <div className="flex flex-col min-h-screen">
-      <header className="px-4 lg:px-6 h-16 flex items-center border-b">
+      <header className="px-6 lg:px-8 h-16 flex items-center border-b">
         <Link href="/" className="flex items-center gap-2 font-semibold">
           <Utensils className="h-6 w-6" />
           <span className="text-xl">MealSphere</span>
         </Link>
-        <nav className="ml-auto flex items-center gap-4 sm:gap-6">
-          {session?.user ? (
-            <UserAvatar user={session.user} />
+        <nav className="ml-auto flex gap-4 sm:gap-6 items-center">
+          {session ? (
+            <div className="flex items-center gap-4">
+              <Link href="/dashboard" className="flex items-center gap-2 text-sm font-medium hover:underline underline-offset-4">
+                <User className="h-5 w-5" />
+                {session.user?.name || 'Profile'}
+              </Link>
+              <Button 
+                variant="ghost" 
+                onClick={handleSignOut}
+                className="text-sm font-medium hover:underline underline-offset-4"
+              >
+                Sign out
+              </Button>
+            </div>
           ) : (
             <>
               <Link href="/login" className="text-sm font-medium hover:underline underline-offset-4">
@@ -31,8 +52,8 @@ export default function Home() {
         </nav>
       </header>
       <main className="flex-1">
-        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48">
-          <div className="container px-4 md:px-6">
+        <section className="w-full py-12 md:py-24 lg:py-32 xl:py-48 px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto">
             <div className="grid gap-6 lg:grid-cols-[1fr_400px] lg:gap-12 xl:grid-cols-[1fr_600px]">
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-2">
@@ -58,10 +79,10 @@ export default function Home() {
                   </Link>
                 </div>
               </div>
-              <div className="flex items-center justify-center">
-                <div className="relative w-full aspect-square overflow-hidden rounded-xl">
+              <div className="flex items-center justify-center w-full">
+                <div className="relative w-full h-[600px] overflow-hidden rounded-xl">
                   <img
-                    src="/placeholder.svg?height=550&width=550"
+                    src="/placeholder.svg"
                     alt="MealSphere Dashboard Preview"
                     className="object-cover w-full h-full"
                   />
@@ -70,8 +91,8 @@ export default function Home() {
             </div>
           </div>
         </section>
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800">
-          <div className="container px-4 md:px-6">
+        <section className="w-full py-16 md:py-24 lg:py-32 bg-gray-100 dark:bg-gray-800 px-4 sm:px-6">
+          <div className="max-w-7xl mx-auto">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Key Features</h2>
@@ -80,7 +101,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 mt-12">
               <div className="flex flex-col items-center space-y-2 rounded-lg border p-6 shadow-sm">
                 <div className="rounded-full bg-primary/10 p-3">
                   <Utensils className="h-6 w-6 text-primary" />

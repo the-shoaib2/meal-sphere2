@@ -107,7 +107,9 @@ export function AppearanceForm({ user }: AppearanceFormProps) {
   }
 
   return (
-    <Card>
+    <>
+      <ThemeToggle />
+      <Card>
       <CardHeader>
         <CardTitle>Appearance</CardTitle>
         <CardDescription>
@@ -166,12 +168,12 @@ export function AppearanceForm({ user }: AppearanceFormProps) {
                 </FormItem>
               )}
             />
-            <div className="mt-4">
-              <Button type="submit">Save Changes</Button>
-            </div>
+            <Button type="submit">Save Changes</Button>
           </form>
         </Form>
+        <ThemeToggle />
       </CardContent>
     </Card>
+  </>
   )
 }
