@@ -55,7 +55,6 @@
     "lucide-react": "^0.454.0",
     "mongodb": "^5.9.2",
     "next": "15.2.4",
-    "next-auth": "^4.24.11",
     "next-themes": "^0.4.6",
     "nodemailer": "latest",
     "prisma": "latest",
@@ -78,7 +77,6 @@
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.7",
     "@tailwindcss/postcss7-compat": "^2.2.17",
-    "@types/bcryptjs": "^2.4.6",
     "@types/node": "^22",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
