@@ -1,8 +1,13 @@
+"use client";
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Utensils, Users, CreditCard, Bell } from "lucide-react"
+import { useSession } from "next-auth/react"
+import { UserAvatar } from "@/components/user-avatar"
 
 export default function Home() {
+  const { data: session } = useSession();
   return (
     <div className="flex flex-col min-h-screen">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b">
@@ -10,13 +15,19 @@ export default function Home() {
           <Utensils className="h-6 w-6" />
           <span className="text-xl">MealSphere</span>
         </Link>
-        <nav className="ml-auto flex gap-4 sm:gap-6">
-          <Link href="/login" className="text-sm font-medium hover:underline underline-offset-4">
-            Login
-          </Link>
-          <Link href="/register" className="text-sm font-medium hover:underline underline-offset-4">
-            Register
-          </Link>
+        <nav className="ml-auto flex items-center gap-4 sm:gap-6">
+          {session?.user ? (
+            <UserAvatar user={session.user} />
+          ) : (
+            <>
+              <Link href="/login" className="text-sm font-medium hover:underline underline-offset-4">
+                Login
+              </Link>
+              <Link href="/register" className="text-sm font-medium hover:underline underline-offset-4">
+                Register
+              </Link>
+            </>
+          )}
         </nav>
       </header>
       <main className="flex-1">
